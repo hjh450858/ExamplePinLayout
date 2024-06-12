@@ -1,0 +1,6 @@
+framework module Pods_ExamplePinLayout_ExamplePinLayoutUITests {
+  umbrella header "Pods-ExamplePinLayout-ExamplePinLayoutUITests-umbrella.h"
+
+  export *
+  module * { export * }
+}
