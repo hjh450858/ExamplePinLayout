@@ -44,7 +44,18 @@ class ViewController: UIViewController {
         label.backgroundColor = .blue
         return label
     }()
+    /// 버튼
+    let button: UIButton = {
+        let button = UIButton()
+        button.setTitle("버튼", for: .normal)
+        button.setTitleColor(.systemBlue, for: .normal)
+        button.backgroundColor = .white
+        return button
+    }()
+    /// 숨김 플래그
+    var isHidden: Bool = true
     
+    /// 색상이 랜덤인 박스
     private let boxes = (0...100).map { _ in
         let view = UIView()
         view.backgroundColor = .random
@@ -56,21 +67,66 @@ class ViewController: UIViewController {
         // PinLayout 콘솔 warning 을 보여줄지 말지 설정 (default: true)
         Pin.logWarnings = true
         
-        configureUI()
+        configureSimpleUI()
+        
+//        configureFlexInFlexViewUI()
+        
+//        configureAlignItemsUI()
         
 //        configureScrollView()
     }
     
     /// 일반 뷰 구현
-    func configureUI() {
+    func configureSimpleUI() {
         view.addSubview(flexView)
         
+        button.addTarget(self, action: #selector(clickBtn), for: .touchUpInside)
+        
         // MARK: 1. addItem
-        flexView.flex.padding(16).define { flex in
+        flexView.flex.padding(16).justifyContent(.center).define { flex in
             flex.addItem(label1)
             flex.addItem(label2)
             flex.addItem(label3)
+            flex.addItem(button)
         }
+    }
+    
+    /// 다중 컨테이너뷰 사용
+    func configureFlexInFlexViewUI() {
+        view.addSubview(flexView)
+        
+        button.addTarget(self, action: #selector(clickBtn), for: .touchUpInside)
+        
+        // MARK: 1. addItem
+        flexView.flex.backgroundColor(.yellow).direction(.column).define { flex in
+            // 또 다른 컨테이너뷰 생성
+            flex.addItem().direction(.row).justifyContent(.center).define {
+                $0.addItem(label1)
+                $0.addItem(label2)
+            }
+            // 또 다른 컨테이너뷰 생성
+            flex.addItem().direction(.row).justifyContent(.center).define {
+                $0.addItem(label3)
+            }
+            // 또 다른 컨테이너뷰 생성
+            flex.addItem().justifyContent(.center).define {
+                $0.addItem(button)
+            }
+        }
+    }
+    
+    /// AlignItem 사용된 UI
+    func configureAlignItemsUI() {
+        view.addSubview(flexView)
+        
+        button.addTarget(self, action: #selector(clickBtn), for: .touchUpInside)
+        
+        flexView.flex.direction(.column).alignItems(.center)
+            .define {
+                $0.addItem(label1).alignSelf(.start)
+                $0.addItem(label2)
+                $0.addItem(label3).alignSelf(.end)
+            }
     }
     
     /// 스크롤뷰로 구현
@@ -84,21 +140,20 @@ class ViewController: UIViewController {
         contentView.flex.padding(0).define { flex in
             boxes.forEach { box in
                 flex.addItem(box)
+                    // 높이
                     .height(100)
+                    // 간격 (spacing)
                     .marginVertical(8)
             }
         }
     }
+
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         // MARK: 2. flexView의 위치 잡기
-        flexView.pin
-            .top(view.pin.safeArea)
-            .bottom(view.pin.safeArea)
-            .left(16)
-            .right(16)
+        flexView.pin.all(view.pin.safeArea)
         
         // MARK: 3. flexView의 Children 위치 잡기
         flexView.flex.layout()
@@ -109,6 +164,14 @@ class ViewController: UIViewController {
         contentView.flex.layout(mode: .adjustHeight)
         // 콘텐츠뷰의 크기를 알아야 스크롤뷰의 스크롤이 가능
         scrollView.contentSize = contentView.frame.size
+    }
+    
+    @objc func clickBtn() {
+        isHidden.toggle()
+        // 해당 뷰를 레이아웃에 포함시킬것인가 말것인가
+        label2.flex.isIncludedInLayout(isHidden)
+        // 뷰 새로고침
+        flexView.flex.layout()
     }
 }
 
